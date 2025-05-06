@@ -10,8 +10,9 @@ If you need the documentation of the master version of verrou, you need to build
 
 
 This repository contains:
-     - Public presentations of verrou (in French and in English). 
-     - a tutorial (only in french). I am waiting the beta-test of this version to avoid maintaining two languages).
+- Public presentations of verrou (in French and in English);
+
+- a tutorial (only in french). I am waiting the beta-test of this version to avoid maintaining two languages).
 
 
 
