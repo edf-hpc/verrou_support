@@ -1,0 +1,34 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import re
+
+if len(sys.argv) < 3:
+    print("""
+Usage: %s PROGRAM  LIB
+
+Generate the necessary exclusion line to avoid perturbing all symbols in LIB,
+when instrumenting PROGRAM with verrou.""" % (sys.argv[0]))
+
+program = sys.argv[1]
+libname = sys.argv[2]
+
+re_libpath = re.compile(r"%s.* => (\S+) " % libname)
+
+ldd = subprocess.Popen(["ldd", program],stdout=subprocess.PIPE)
+
+
+
+for line in ldd.communicate()[0].decode('utf8').splitlines():
+    line = line.strip()
+    m = re_libpath.match(line)
+    if m:
+        libpath = m.group(1)
+        break
+
+readlink=subprocess.Popen(["readlink", "-f", libpath],stdout=subprocess.PIPE)
+
+libpath = readlink.communicate()[0].decode('utf8').strip()
+
+print("* %s" % libpath)

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Réalise l'étude de convergence du calcul d'intégrale
+./unitTest 1.1 >cvPlot.dat
+VERROU="valgrind --tool=verrou --rounding-mode=random"
+$VERROU ./unitTest 1.1 >cvPlot1.dat
+$VERROU ./unitTest 1.1 >cvPlot2.dat
+$VERROU ./unitTest 1.1 >cvPlot3.dat
+
+
+# Calcule l'estimateur d'erreur en post-traitement
+./util/csv-estimator --col-abs=2 cvPlot.dat cvPlot?*.dat >cvPlot.stat
+
+# Produit une courbe représentant l'erreur en fonction du nombre de rectangles dans "cvPlot.pdf"
+gnuplot cvPlot.gp

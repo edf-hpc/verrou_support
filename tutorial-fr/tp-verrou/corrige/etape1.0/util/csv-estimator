@@ -1,0 +1,129 @@
+#!/usr/bin/python3
+
+import argparse
+import re
+import sys
+
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 description="""
+
+Compute estimator about the data contained in the provided data FILEs.""",
+                                 epilog="""
+
+Each FILE is supposed to contain array-like data, represented as decimal numbers
+displayed in rows and space-separated columns. All FILEs must have the same
+array structure: same number of rows and columns. The output produced respects
+the same formatting, with the data of the reference (the first file).
+
+Additionally, for all columns listed with `--col-rel' or `--col-abs, an extra column is output,
+presenting the bernouilli estimator (relative or absolute) of the data in the column.
+
+
+Explained another way, if FILE #k contains x_{i,j}^k in its i-th row and j-th
+column, the relative columns output will contain \hat{s}_{i,j} such that:
+
+\hat{s}_{i,j} = max( |x_{i,j}^k - x_{i,j}^0 | for all k )/x_{i,j}^0
+
+The maximal observed estimator is output on the standard error. If it
+is higher than the maximal value set using the `--est-max' option, the return
+value is 1. Otherwise the program returns 0.
+""")
+parser.add_argument('filenames', metavar='FILE', type=str, nargs='+',
+                    help='data file')
+parser.add_argument('--est-max', dest='epsilon', type=float, action='store',
+                    metavar="EPSILON", default=1.,
+                    help='maximum tolerance for the relative bernouilli estimator (default: 1)')
+parser.add_argument('--col-rel', dest="cols_rel", metavar="COL", type=int, action='append',
+                    default=[],
+                    help='generate relative estimator for this column. May be used multiple times')
+parser.add_argument('--col-abs', dest="cols_abs", metavar="COL", type=int, action='append',
+                    default=[],                    
+                    help='generate absolute estimator for this column. May be used multiple times')
+args = parser.parse_args()
+
+
+
+def DataFile(filename):
+    sep = re.compile(r"\s+")
+    with open(filename, "r") as f:
+        for line in f:
+            vals = [float(s) for s in sep.split(line.strip())]
+            yield vals
+
+files = [DataFile(f) for f in args.filenames]
+
+maxEstAbs = 0.
+maxEstRel = 0.
+header = True
+while True:
+    try:
+        data = [next(f) for f in files]
+
+        if header:
+            J = 1
+            for j in range(len(data[0])):
+                if j+1 in args.cols_abs or j+1 in args.cols_abs:
+                    if j!=0: sys.stdout.write("   ")
+                    sys.stdout.write("%-23s " % ("# (%d)" % J)); J+=1
+                    sys.stdout.write("%-23s " % ("# (%d)" % J)); J+=1
+                    if j+1 in args.cols_abs and j+1 in args.cols_abs:
+                        sys.stdout.write("%-23s " % ("# (%d)" % J)); J+=1                        
+                    sys.stdout.write("   ")
+                else:
+                    pass
+                    sys.stdout.write("%-23s " % ("# (%d)" % J)); J+=1
+            sys.stdout.write("\n")
+            for j in range(len(data[0])):
+                if j+1 in args.cols_abs or j+1 in args.cols_abs:
+                    if j!= 0: sys.stdout.write("   ")
+                    sys.stdout.write("%-23s " % ("# input col %d (first)" % (j+1)))
+                    if j+1 in args.cols_rel:
+                        sys.stdout.write("%-23s " % ("# input col %d (est rel)" % (j+1)))
+                    if j+1 in args.cols_abs:
+                        sys.stdout.write("%-23s " % ("# input col %d (est abs)" % (j+1)))
+
+                    sys.stdout.write("   ")
+                else:
+                    sys.stdout.write("%-23s " % ("# input col %d (first)" % (j+1)))
+            sys.stdout.write("\n")
+            header = False
+
+        for j in range(len(data[0])):
+            vals = [d[j] for d in data]
+            absEst=max([abs(vals[0]-x) for x in vals[1:] ])
+            # Compute standard deviation if necessary
+            if j+1 in args.cols_abs and j+1 in args.cols_rel:
+                maxEstAbs = max(maxEstAbs, absEst)
+                relEst= absEst/ abs(vals[0])
+                maxEstRel = max(maxEstRel, relEst)
+                if j!=0: sys.stdout.write("   ")
+                sys.stdout.write("%.17e %.17e %.17e   " % (vals[0], relEst, absEst))
+            elif j+1 in args.cols_abs:
+                maxEstAbs = max(maxEstAbs, absEst)
+                if j!=0: sys.stdout.write("   ")
+                sys.stdout.write("%.17e %.17e    " % (vals[0], absEst))
+            elif j+1 in args.cols_rel:
+                relEst= absEst/ abs(vals[0])
+                maxEstRel = max(maxEstRel, relEst)
+                if j!=0: sys.stdout.write("   ")
+                sys.stdout.write("%.17e %.17e    " % (vals[0], relEst))
+
+                
+            else:
+                sys.stdout.write("%.17e " % vals[0])
+
+        sys.stdout.write("\n")
+    except StopIteration:
+        break
+
+if len(args.cols_abs)>0:
+    sys.stderr.write("max abs estimator: %.17e\n" % maxEstAbs)
+    if maxEstAbs > args.epsilon:
+        sys.exit(1)
+
+if len(args.cols_rel)>0:
+    sys.stderr.write("max rel estimator: %.17e\n" % maxEstRel)
+    if maxEstRel > args.epsilon:
+        sys.exit(1)
+    
+sys.exit(0)
