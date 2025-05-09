@@ -13,3 +13,6 @@ clean:
 
 distclean: clean
 	latexmk -C $(MAIN)
+
+install: $(DOC)
+	cp $(DOC) ../tp-verrou/tp-verrou.pdf
