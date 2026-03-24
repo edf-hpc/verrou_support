@@ -539,7 +539,7 @@ $ echo $?
   %% \item (optionnelle) Que se passe-t-il avec des statistiques sur
   %%   10~échantillons~? Quel est l'impact du mode ``proportionnel'' de verrou ?
   %%   Rappel : on active ce mode d'arrondi à l'aide de l'option :\\
-  %%   \strut\qquad{\tt --rounding-mode=average}
+  %%   \strut\qquad{\tt --rounding-mode=nearness}
   %% \item (optionnelle [plus simple après le delta-debugging]) Comparer les différents mode d'arrondis en tracant les histogrammes à l'aide de la commande \texttt{verrou\_plot\_stat}.
   \end{enumerate}
 \end{question}
@@ -1096,7 +1096,7 @@ prototypes suivants: \medskip
   \item Ecrire/récupérer les scripts \texttt{PS\_RUN} et
     \texttt{PS\_EXTRACT} (\texttt{PS\_EXTRACT} doit afficher la
     dernière valeur de la convergence). 
-  \item Comparer les distributions random et average ainsi que les
+  \item Comparer les distributions random et nearness ainsi que les
     résultats déterministes nearest, upward, downward et farthest avec
     \texttt{verrou\_plot\_stat}. 
   \item Que se passe-t-il ? Pourquoi ?
